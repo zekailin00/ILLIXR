@@ -1,0 +1,27 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "remove_monado_ipc",
+            "type": "shell",
+            "command": "rm -f ${env:XDG_RUNTIME_DIR}/monado_comp_ipc"
+        },
+        {
+            "label": "configure native vk",
+            "type": "shell",
+            "command": "cmake -S=. -B=build-vk  -DCMAKE_INSTALL_PREFIX=build-vk/drop -DYAML_FILE=profiles/native_vk.yaml",
+        },
+        {
+            "label": "configure compute offload",
+            "type": "shell",
+            "command": "cmake -S=. -B=build-offload -DCMAKE_INSTALL_PREFIX=build-offload/drop -DYAML_FILE=profiles/offload.yaml",
+        },
+        {
+            "label": "build compute offload",
+            "type": "shell",
+            "dependsOn": "configure compute offload"
+        }
+    ]
+}

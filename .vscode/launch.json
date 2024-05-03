@@ -1,0 +1,120 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Monado Service Debug",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/drops/bin/monado_vk-service",
+        "args": [],
+        "stopAtEntry": true,
+        "cwd": "${workspaceFolder}",
+        "environment": [
+            { "name": "IXIR_PTH", "value": "/home/zekailin00/Desktop/ILLIXR/build/drops/lib" },
+            { "name": "LD_LIBRARY_PATH", "value": "/home/zekailin00/Desktop/ILLIXR/build/drops/lib" },
+            { "name": "ILLIXR_DATA", "value": "/home/zekailin00/Desktop/ILLIXR/data/mav0" },
+            { "name": "ILLIXR_DEMO_DATA", "value": "/home/zekailin00/Desktop/ILLIXR/demo_data" },
+            { "name": "ILLIXR_PATH", "value": "/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.main.dbg.so" },
+            { "name": "ILLIXR_COMP", "value":
+                "/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.audio_pipeline.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.gtsam_integrator.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.offline_cam.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.offline_imu.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.pose_prediction.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.timewarp_vk.dbg.so:/home/zekailin00/Desktop/ILLIXR/build/drops/lib/libplugin.openvins.dbg.so" },
+            { "name": "XRT_TRACING", "value": "true" },
+            { "name": "XRT_DEBUG_GUI", "value": "true" }, // open debug gui
+            { "name": "IPC_LOG", "value": "0" }, // IPC logging
+            { "name": "XRT_LOG", "value": "0" }, // global log logging
+            { "name": "XRT_COMPOSITOR_LOG", "value": "0" }, // global log logging
+            { "name": "ILLIXR_OFFLOAD_ENABLE", "value": "False" },
+            { "name": "ILLIXR_ENABLE_VERBOSE_ERRORS", "value": "False" },
+            { "name": "ILLIXR_ALIGNMENT_ENABLE", "value": "False" },
+            { "name": "ILLIXR_ENABLE_PRE_SLEEP", "value": "False" },
+            { "name": "XR_RUNTIME_JSON", "value": "/home/zekailin00/Desktop/ILLIXR/build/drops/share/openxr/1/openxr_monado_vk.json" },
+        ],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb",
+        "setupCommands": [
+          {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ],
+        "preLaunchTask": "remove_monado_ipc"
+      },
+      {
+        "name": "Openxr App Debug",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/drops/bin/openxr-example",
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [
+            { "name": "XR_RUNTIME_JSON", "value": "/home/zekailin00/Desktop/monado/build/drops/share/openxr/1/openxr_monado.json" },
+          ],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb",
+        "setupCommands": [
+          {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]
+      },
+      {
+        "name": "ILLIXR vk native",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build-native-vk/main.dbg.exe",
+        "args": [
+          "--yaml=/home/zekailin00/Desktop/ILLIXR/illixr.yaml",
+          "--vis=openvins"
+        ],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [
+            { "name": "LD_LIBRARY_PATH", "value": "/home/zekailin00/Desktop/ILLIXR/build-native-vk/drops/lib"},
+            { "name": "ILLIXR_RUN_DURATION", "value": "20000"},
+          ],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb",
+        "setupCommands": [
+          {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]
+      },
+      {
+        "name": "ILLIXR offload",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build-offload/main.dbg.exe",
+        "args": [
+          "--yaml=${workspaceFolder}/illixr.yaml"
+        ],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [
+            { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build-offload/drops/lib"},
+            { "name": "ILLIXR_RUN_DURATION", "value": "20000"},
+          ],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb",
+        "setupCommands": [
+          {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]
+      }
+    ]
+}
