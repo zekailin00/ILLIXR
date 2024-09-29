@@ -108,3 +108,14 @@ profile:
   enable_alignment: false
   enable_verbose_errors: false
   enable_pre_sleep: false
+
+
+profile:
+  name: offload_render
+  plugins: offline_imu,offline_cam,gtsam_integrator,pose_prediction,compute_offload
+  build_flags: -DILLIXR_VULKAN
+  build_type: Release
+  enable_offload: false
+  enable_alignment: false
+  enable_verbose_errors: false
+  enable_pre_sleep: false

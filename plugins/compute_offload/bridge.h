@@ -2,7 +2,7 @@
 
 #include "offload_protocol.h"
 
-bool packet_arrived();
+reqrsp_type packet_arrived();
 int initializeBridge();
 int receive(void* buf, unsigned int bytes);
 int send(const void* buf, unsigned int bytes);
@@ -18,6 +18,12 @@ int send(const void* buf, unsigned int bytes);
 #include <arpa/inet.h>
 #include <stdio.h>
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include "rose_port.h"
+#include "mmio.h"
+
 static int client_fd = -1;
 #define PORT    8080
 #define IP_ADDR "127.0.0.1"
@@ -31,32 +37,57 @@ static int client_fd = -1;
 
 int initializeBridge()
 {
-    SOCKET_CHECK((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0);
+    // SOCKET_CHECK((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0);
 
-    struct sockaddr_in address = {};
-    address.sin_family = AF_INET;
-    address.sin_port = htons(PORT);
+    // struct sockaddr_in address = {};
+    // address.sin_family = AF_INET;
+    // address.sin_port = htons(PORT);
  
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    SOCKET_CHECK(inet_pton(AF_INET, IP_ADDR, &address.sin_addr) <= 0);
-    SOCKET_CHECK((connect(client_fd, (struct sockaddr*)&address, sizeof(address))) < 0);
+    // // Convert IPv4 and IPv6 addresses from text to binary form
+    // SOCKET_CHECK(inet_pton(AF_INET, IP_ADDR, &address.sin_addr) <= 0);
+    // SOCKET_CHECK((connect(client_fd, (struct sockaddr*)&address, sizeof(address))) < 0);
+
+
+    printf("Trying to mmap addresses\n");
+    int mem_fd;
+    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    ptr = (intptr_t) mmap(NULL, 24, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, 0x2000);
+    printf("Ptr: %lx\n", ptr);
+
+    
+    int mem_fd2;
+    mem_fd2 = open("/dev/mem", O_RDWR | O_SYNC);
+    dma_ptr = (intptr_t) mmap(NULL, 56*56*4, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd2, 0x88000000);
+    printf("dma ptr: %lx\n", dma_ptr);
+
+    printf("[firesim-target] configuring counter\n");
+    reg_write32(ROSE_DMA_CONFIG_COUNTER_ADDR_0, 56*56*4);
 
     return 0;
 }
 
-bool packet_arrived()
+reqrsp_type packet_arrived()
 {
-    message_packet_t packet;
-    ssize_t bytes = recv(
-        client_fd, &packet.header, sizeof(header_t),
-        MSG_PEEK | MSG_DONTWAIT
-    );
-    bool result = false;
-    if (bytes > 0)
-    {
-        result = true;
+    // message_packet_t packet;
+    // ssize_t bytes = recv(
+    //     client_fd, &packet.header, sizeof(header_t),
+    //     MSG_PEEK | MSG_DONTWAIT
+    // );
+    // bool result = false;
+    // if (bytes > 0)
+    // {
+    //     result = true;
+    // }
+    // return result;
+
+    if (reg_read32(ROSE_STATUS_ADDR) & 0x2) {
+        return MMIO_type;
+    } else if (reg_read32(ROSE_STATUS_ADDR) & 0x4) {
+        return DMA_type;
+    } else {
+        return NONE_type;
     }
-    return result;
+
 }
 
 int receive(void* buf, unsigned int bytes)
@@ -81,7 +112,7 @@ int send(const void* buf, unsigned int bytes)
 #elif defined(FIRESIM)
 
 
-bool packet_arrived()
+reqrsp_type packet_arrived()
 {
     return 0;
 }
@@ -103,8 +134,9 @@ int send(const void* buf, unsigned int bytes)
 
 #else // emulated interface
 
-bool packet_arrived()
+reqrsp_type packet_arrived()
 {
+    return NONE;
     static int count = 0;
     if (count++ == 10000)
     {

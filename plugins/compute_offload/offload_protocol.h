@@ -8,10 +8,17 @@ enum socket_protocol
     CS_DEFINE_STEP = 0x83,
     CS_RSP_STALL   = 0x84,
 
-    CS_REQ_POSE = 1u,
-    CS_RSP_POSE = 2u,
-    CS_RSP_IMG  = 3u,
+    CS_REQ_POSE = 0x10,
+    CS_RSP_POSE = 0x11,
+    CS_RSP_IMG  = 0x12,
 
+};
+
+enum reqrsp_type
+{
+  NONE_type = 0x0,
+  MMIO_type = 0x2,
+  DMA_type = 0x4,
 };
 
 typedef struct header
