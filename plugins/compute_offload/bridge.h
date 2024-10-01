@@ -80,9 +80,11 @@ reqrsp_type packet_arrived()
     // }
     // return result;
 
-    if (reg_read32(ROSE_STATUS_ADDR) & 0x2) {
+    uint8_t status = reg_read32(ROSE_STATUS_ADDR);
+
+    if (status & 0x2) {
         return MMIO_type;
-    } else if (reg_read32(ROSE_STATUS_ADDR) & 0x4) {
+    } else if (status & 0x4) {
         return DMA_type;
     } else {
         return NONE_type;

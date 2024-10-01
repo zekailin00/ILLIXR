@@ -60,6 +60,7 @@ protected:
         switch (packet_arrived()) 
         {
             case MMIO_type: {
+                printf("MMIO request received");
                 uint32_t cmd = ROSE_RX_DATA_1;
                 if (cmd == CS_REQ_POSE) 
                 {
@@ -100,6 +101,7 @@ protected:
             }
             case DMA_type: {
 
+                printf("reading dma image");
                 uint8_t *pointer;
                 pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + 56*56*4;  
                 memcpy(imageBuffer, pointer, 56*56*4);
