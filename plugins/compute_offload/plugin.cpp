@@ -102,7 +102,7 @@ protected:
 
                 printf("[firesim-target] reading image\n");
                 uint8_t *pointer;
-                pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + 56*56*4;  
+                pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + ((status_prev & 0x4)>>3) * 56*56*4;  
                 memcpy(imageBuffer, pointer, 56*56*4);
 
                 for (int i = 0; i < 56; i++) {
