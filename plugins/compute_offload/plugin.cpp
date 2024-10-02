@@ -57,69 +57,125 @@ protected:
     void _p_one_iteration() override
     {
 
-        switch (packet_arrived()) 
-        {
-            case MMIO_type: {
-                printf("MMIO request received");
-                uint32_t cmd = ROSE_RX_DATA_1;
-                if (cmd == CS_REQ_POSE) 
+        if (ROSE_RX_DEQ_VALID_1) {
+            uint32_t cmd = ROSE_RX_DATA_1;
+            if (cmd == CS_REQ_POSE) {
+                printf("[firesim-target] Received pose request\n");
+
+                fast_pose_type fastPose = pp->get_fast_pose(); 
+                float buffer[7] = {
+                    fastPose.pose.orientation.x(),
+                    fastPose.pose.orientation.y(),
+                    fastPose.pose.orientation.z(),
+                    fastPose.pose.orientation.w(),
+                    fastPose.pose.position.x(),
+                    fastPose.pose.position.y(),
+                    fastPose.pose.position.z(),
+                };
+
+                printf("[firesim-target] Sending Pose...\n");
+
+                while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+                reg_write32(ROSE_TX_DATA_ADDR, CS_RSP_POSE);
+                while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+                reg_write32(ROSE_TX_DATA_ADDR, 7*4);
+
+                for (int i = 0; i < 7; i++) {
+                    while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+                    reg_write32(ROSE_TX_DATA_ADDR, *((uint32_t *) &buffer[i]));
+                }
+
+                while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+                reg_write32(ROSE_TX_DATA_ADDR, 0);
+
+                printf("[firesim-target] Sent Pose...\n");
+
+                printf("[firesim-target] waiting for airsim status\n");
+                status = 0x0;
+                status_prev = 0x0;
+                do
                 {
-                    fast_pose_type fastPose = pp->get_fast_pose(); 
-                    float buffer[7] = {
-                        fastPose.pose.orientation.x(),
-                        fastPose.pose.orientation.y(),
-                        fastPose.pose.orientation.z(),
-                        fastPose.pose.orientation.w(),
-                        fastPose.pose.position.x(),
-                        fastPose.pose.position.y(),
-                        fastPose.pose.position.z(),
-                    };
+                    status_prev = status;
+                    status = reg_read32(ROSE_STATUS_ADDR);
+                    printf("[firesim-target] status: %x\n", status);
+                } while ((status & 0x4) == (status_prev & 0x4));    
+                uint64_t status_changed = rdcycle();
 
-                    printf("[firesim-target] Sending Pose...\n");
-
-                    while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
-                    reg_write32(ROSE_TX_DATA_ADDR, CS_RSP_POSE);
-                    while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
-                    reg_write32(ROSE_TX_DATA_ADDR, 7*4);
-
-                    for (int i = 0; i < 7; i++) {
-                        while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
-                        reg_write32(ROSE_TX_DATA_ADDR, *((uint32_t *) &buffer[i]));
-                    }
-
-                    while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
-                    reg_write32(ROSE_TX_DATA_ADDR, 0);
-
-                    printf("[firesim-target] Sent Pose...\n");
-
-                } 
-                else
-                {
-                    printf("unknown packet command: %x\n", cmd);
-                } 
-                break;
-            }
-            case DMA_type: {
-
-                printf("reading dma image");
-                uint8_t *pointer;
-                pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + 56*56*4;  
-                memcpy(imageBuffer, pointer, 56*56*4);
+                printf("[firesim-target] reading image\n");
+                recv_img_dma((status_prev & 0x4)>>3);
 
                 for (int i = 0; i < 56; i++) {
                     for (int j = 0; j < 56; j++) {
-                        printf("%d ", imageBuffer[i*56+j]);
+                        printf("%" PRIu32 " ", buf[i*56+j]);
                     }
                     printf("\n");
                 }
-
-                break;
             }
-            default:
-                printf("no packets\n");
-                break;
-
         }
+
+        // switch (packet_arrived()) 
+        // {
+        //     case MMIO_type: {
+        //         printf("MMIO request received");
+        //         uint32_t cmd = ROSE_RX_DATA_1;
+        //         if (cmd == CS_REQ_POSE) 
+        //         {
+        //             fast_pose_type fastPose = pp->get_fast_pose(); 
+        //             float buffer[7] = {
+        //                 fastPose.pose.orientation.x(),
+        //                 fastPose.pose.orientation.y(),
+        //                 fastPose.pose.orientation.z(),
+        //                 fastPose.pose.orientation.w(),
+        //                 fastPose.pose.position.x(),
+        //                 fastPose.pose.position.y(),
+        //                 fastPose.pose.position.z(),
+        //             };
+
+        //             printf("[firesim-target] Sending Pose...\n");
+
+        //             while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+        //             reg_write32(ROSE_TX_DATA_ADDR, CS_RSP_POSE);
+        //             while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+        //             reg_write32(ROSE_TX_DATA_ADDR, 7*4);
+
+        //             for (int i = 0; i < 7; i++) {
+        //                 while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+        //                 reg_write32(ROSE_TX_DATA_ADDR, *((uint32_t *) &buffer[i]));
+        //             }
+
+        //             while ((reg_read8(ROSE_STATUS_ADDR) & 0x1) == 0) ;
+        //             reg_write32(ROSE_TX_DATA_ADDR, 0);
+
+        //             printf("[firesim-target] Sent Pose...\n");
+
+        //         } 
+        //         else
+        //         {
+        //             printf("unknown packet command: %x\n", cmd);
+        //         } 
+        //         break;
+        //     }
+        //     case DMA_type: {
+
+        //         printf("reading dma image");
+        //         uint8_t *pointer;
+        //         pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + 56*56*4;  
+        //         memcpy(imageBuffer, pointer, 56*56*4);
+
+        //         for (int i = 0; i < 56; i++) {
+        //             for (int j = 0; j < 56; j++) {
+        //                 printf("%d ", imageBuffer[i*56+j]);
+        //             }
+        //             printf("\n");
+        //         }
+
+        //         break;
+        //     }
+        //     default:
+        //         printf("no packets\n");
+        //         break;
+
+        // }
 
 
         // message_packet_t packet;
