@@ -108,7 +108,7 @@ protected:
 
                 for (int i = 0; i < 56; i++) {
                     for (int j = 0; j < 56; j++) {
-                        printf("%" PRIu32 " ", imageBuffer[i*56+j]);
+                        printf("%d ", imageBuffer[i*56+j]);
                     }
                     printf("\n");
                 }
