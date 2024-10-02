@@ -102,11 +102,13 @@ protected:
                 uint64_t status_changed = rdcycle();
 
                 printf("[firesim-target] reading image\n");
-                recv_img_dma((status_prev & 0x4)>>3);
+                uint8_t *pointer;
+                pointer = (uint8_t *) ROSE_DMA_BASE_ADDR_0 + 56*56*4;  
+                memcpy(imageBuffer, pointer, 56*56*4);
 
                 for (int i = 0; i < 56; i++) {
                     for (int j = 0; j < 56; j++) {
-                        printf("%" PRIu32 " ", buf[i*56+j]);
+                        printf("%" PRIu32 " ", imageBuffer[i*56+j]);
                     }
                     printf("\n");
                 }
