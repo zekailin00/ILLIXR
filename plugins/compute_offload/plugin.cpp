@@ -91,15 +91,14 @@ protected:
                 printf("[firesim-target] Sent Pose...\n");
 
                 printf("[firesim-target] waiting for airsim status\n");
-                status = 0x0;
-                status_prev = 0x0;
+                uint8_t status = 0x0;
+                uint8_t status_prev = 0x0;
                 do
                 {
                     status_prev = status;
                     status = reg_read32(ROSE_STATUS_ADDR);
                     printf("[firesim-target] status: %x\n", status);
                 } while ((status & 0x4) == (status_prev & 0x4));    
-                uint64_t status_changed = rdcycle();
 
                 printf("[firesim-target] reading image\n");
                 uint8_t *pointer;
