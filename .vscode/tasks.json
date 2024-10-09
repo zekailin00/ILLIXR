@@ -22,6 +22,7 @@
             "label": "build compute offload",
             "type": "shell",
             "dependsOn": "configure compute offload"
+            // TODO: build and install
         }
     ]
 }

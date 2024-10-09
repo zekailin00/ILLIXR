@@ -102,7 +102,7 @@
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [
-            { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build-offload/drops/lib"},
+            { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build-offload/drop/lib"},
             { "name": "ILLIXR_RUN_DURATION", "value": "20000"},
           ],
         "externalConsole": false,
