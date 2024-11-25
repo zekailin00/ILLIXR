@@ -14,6 +14,23 @@
             "command": "cmake -S=. -B=build-vk  -DCMAKE_INSTALL_PREFIX=build-vk/drop -DYAML_FILE=profiles/native_vk.yaml",
         },
         {
+            "label": "build native vk",
+            "type": "shell",
+            "dependsOn": "configure native vk",
+            "command": "cmake --build ./build-vk -j$(nproc)"
+        },
+        {
+            "label": "install native vk",
+            "type": "shell",
+            "dependsOn": "build native vk",
+            "command": "cmake --install ./build-vk"
+        },
+        {
+            "label": "remove native vk",
+            "type": "shell",
+            "command": "rm -rf ./build-vk"
+        },
+        {
             "label": "configure compute offload",
             "type": "shell",
             "command": "cmake -S=. -B=build-offload -DCMAKE_INSTALL_PREFIX=build-offload/drop -DYAML_FILE=profiles/offload.yaml",
@@ -21,8 +38,19 @@
         {
             "label": "build compute offload",
             "type": "shell",
-            "dependsOn": "configure compute offload"
-            // TODO: build and install
+            "dependsOn": "configure compute offload",
+            "command": "cmake --build ./build-offload -j$(nproc)"
+        },
+        {
+            "label": "install compute offload",
+            "type": "shell",
+            "dependsOn": "build compute offload",
+            "command": "cmake --install ./build-offload"
+        },
+        {
+            "label": "remove compute offload",
+            "type": "shell",
+            "command": "rm -rf ./build-offload"
         }
     ]
 }

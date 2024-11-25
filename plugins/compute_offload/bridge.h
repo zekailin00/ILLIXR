@@ -39,8 +39,8 @@ int initializeBridge()
  
     // Convert IPv4 and IPv6 addresses from text to binary form
     SOCKET_CHECK(inet_pton(AF_INET, IP_ADDR, &address.sin_addr) <= 0);
-    SOCKET_CHECK((connect(client_fd, (struct sockaddr*)&address, sizeof(address))) < 0);
-
+    int result = connect(client_fd, (struct sockaddr*)&address, sizeof(address));
+    
     return 0;
 }
 

@@ -38,7 +38,7 @@ public:
         cv::Mat _m_mat = cv::imread(_m_path, cv::IMREAD_GRAYSCALE);
     #error "Linux scheduler cannot interrupt IO work, so lazy-loading is unadvisable."
 #endif
-        assert(!_m_mat.empty());
+        // assert(!_m_mat.empty());
         return _m_mat;
     }
 

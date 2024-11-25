@@ -5,6 +5,7 @@
 #include "illixr/switchboard.hpp"
 #include "illixr/threadloop.hpp"
 #include "illixr/pose_prediction.hpp"
+#include "illixr/opencv_data_types.hpp"
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -47,7 +48,7 @@ public:
         threadloop{name_, pb_},
         _m_sb{pb->lookup_impl<switchboard>()},
         pp{pb->lookup_impl<pose_prediction>()},
-        offloadImageTopic{_m_sb->get_writer<unsigned char*>("offloadImage")}
+        offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")}
         {
             STATUS_CHECK(initializeBridge(), "Failed to initialize bridge.");
         }
@@ -119,9 +120,16 @@ protected:
             }
             else if (packet.header.command == CS_RSP_IMG)
             {
-                static int imageIndex = 0;
-                memcpy(imageBuffer, packet.payload, packet.header.payload_size);
-                // offloadImageTopic.put(offloadImageTopic.allocate<unsigned char*>(imageBuffer));
+                std::vector<uint8_t> image;
+                image.resize(IMG_WIDTH * IMG_HEIGHT * IMG_CHN);
+
+                memcpy(image.data(), packet.payload, packet.header.payload_size);
+                offloadImageTopic.put(
+                    offloadImageTopic.allocate<host_image_type>(
+                        host_image_type{image, IMG_WIDTH, IMG_HEIGHT}
+                    )
+                );
+                
                 free(packet.payload);
                 printf("received image: %d\n", imageIndex++);
             }
@@ -139,7 +147,8 @@ protected:
 private:
     const std::shared_ptr<switchboard> _m_sb;
     const std::shared_ptr<pose_prediction> pp;
-    switchboard::writer<unsigned char*> offloadImageTopic;
+    switchboard::writer<host_image_type> offloadImageTopic;
+    int imageIndex = 0;
 
     unsigned char imageBuffer[IMG_WIDTH * IMG_HEIGHT * IMG_CHN];
 };

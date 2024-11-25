@@ -65,6 +65,8 @@ public:
         , _m_slow_pose{sb->get_reader<pose_type>("slow_pose")}
         , _m_fast_pose{sb->get_reader<imu_raw_type>("imu_raw")} //, glfw_context{pb->lookup_impl<global_config>()->glfw_context}
         , _m_rgb_depth(sb->get_reader<rgb_depth_type>("rgb_depth"))
+        , _m_eye(sb->get_reader<eye_type>("eye"))
+        , _m_host_image(sb->get_reader<host_image_type>("host_image"))
         , _m_cam{sb->get_buffered_reader<cam_type>("cam")} {
         spdlogger(std::getenv("DEBUGVIEW_LOG_LEVEL"));
     }
@@ -207,6 +209,30 @@ public:
             ImGui::End();
         }
 
+        if (use_eye) {
+            ImGui::SetNextWindowSize(ImVec2(700, 320), ImGuiCond_Once);
+            ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once,
+                                    ImVec2(1.0f, 1.0f));
+            ImGui::Begin("Eye Tracker View");
+            auto windowSize     = ImGui::GetWindowSize();
+            auto verticalOffset = ImGui::GetCursorPos().y;
+            ImGui::Image((void*) (intptr_t) eye_textures[0], ImVec2(windowSize.x / 2, windowSize.y - verticalOffset * 2));
+            ImGui::SameLine();
+            ImGui::Image((void*) (intptr_t) eye_textures[1], ImVec2(windowSize.x / 2, windowSize.y - verticalOffset * 2));
+            ImGui::End();
+        }
+
+        if (use_host_image) {
+            ImGui::SetNextWindowSize(ImVec2(700, 320), ImGuiCond_Once);
+            ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once,
+                                    ImVec2(1.0f, 1.0f));
+            ImGui::Begin("Host View");
+            auto windowSize     = ImGui::GetWindowSize();
+            auto verticalOffset = ImGui::GetCursorPos().y;
+            ImGui::Image((void*) (intptr_t) host_image_texture, ImVec2(windowSize.x / 2, windowSize.y - verticalOffset * 2));
+            ImGui::End();
+        }
+
         if (use_rgbd) {
             ImGui::SetNextWindowSize(ImVec2(700, 350), ImGuiCond_Once);
 
@@ -289,6 +315,57 @@ public:
         return true;
     }
 
+    bool load_eye_image() {
+        RAC_ERRNO_MSG("debugview at start of load_eye_image");
+
+        eye = _m_eye.get_ro_nullable();
+        if (eye == nullptr) {
+            return false;
+        }
+
+        if (!use_eye)
+            use_eye = true;
+
+        glBindTexture(GL_TEXTURE_2D, eye_textures[0]);
+        cv::Mat eye0{eye->img0.clone()};
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, eye0.cols, eye0.rows, 0, GL_RED, GL_UNSIGNED_BYTE, eye0.ptr());
+        eye_texture_sizes[0] = Eigen::Vector2i(eye0.cols, eye0.rows);
+        GLint swizzleMask[]     = {GL_RED, GL_RED, GL_RED, GL_RED};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+
+        glBindTexture(GL_TEXTURE_2D, eye_textures[1]);
+        cv::Mat eye1{eye->img1.clone()};
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, eye1.cols, eye1.rows, 0, GL_RED, GL_UNSIGNED_BYTE, eye1.ptr());
+        eye_texture_sizes[1] = Eigen::Vector2i(eye1.cols, eye1.rows);
+        GLint swizzleMask1[]    = {GL_RED, GL_RED, GL_RED, GL_RED};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask1);
+
+        RAC_ERRNO_MSG("debugview at end of load_eye_image");
+        return true;
+    }
+
+    bool load_host_image() {
+        RAC_ERRNO_MSG("debugview at start of load_host_image");
+
+        host_image = _m_host_image.get_ro_nullable();
+        if (host_image == nullptr) {
+            return false;
+        }
+
+        if (!use_host_image)
+            use_host_image = true;
+        
+        glBindTexture(GL_TEXTURE_2D, host_image_texture);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, 
+            host_image->width, host_image->height, 0, 
+            GL_RGBA, GL_UNSIGNED_BYTE, host_image->host_image.data()
+        );
+
+        RAC_ERRNO_MSG("debugview at end of load_host_image");
+        return false;
+    }
+
     Eigen::Matrix4f generateHeadsetTransform(const Eigen::Vector3f& position, const Eigen::Quaternionf& rotation,
                                              const Eigen::Vector3f& positionOffset) {
         Eigen::Matrix4f headsetPosition;
@@ -341,6 +418,8 @@ public:
 
         load_camera_images();
         load_rgb_depth();
+        load_eye_image();
+        load_host_image();
 
         glUseProgram(demoShaderProgram);
 
@@ -424,6 +503,8 @@ private:
     switchboard::reader<pose_type>         _m_slow_pose;
     switchboard::reader<imu_raw_type>      _m_fast_pose;
     switchboard::reader<rgb_depth_type>    _m_rgb_depth;
+    switchboard::reader<eye_type>          _m_eye;
+    switchboard::reader<host_image_type>   _m_host_image;
     switchboard::buffered_reader<cam_type> _m_cam;
     GLFWwindow*                            gui_window{};
 
@@ -440,15 +521,22 @@ private:
 
     Eigen::Vector3f tracking_position_offset = Eigen::Vector3f{0.0f, 0.0f, 0.0f};
 
-    switchboard::ptr<const cam_type>       cam;
-    switchboard::ptr<const rgb_depth_type> rgbd;
+    switchboard::ptr<const cam_type>        cam;
+    switchboard::ptr<const rgb_depth_type>  rgbd;
+    switchboard::ptr<const eye_type>        eye;
+    switchboard::ptr<const host_image_type> host_image;
     bool                                   use_cam  = false;
     bool                                   use_rgbd = false;
+    bool                                   use_eye = false;
+    bool                                   use_host_image = false;
     // std::vector<std::optional<cv::Mat>> camera_data = {std::nullopt, std::nullopt};
     GLuint          camera_textures[2];
     Eigen::Vector2i camera_texture_sizes[2] = {Eigen::Vector2i::Zero(), Eigen::Vector2i::Zero()};
     GLuint          rgbd_textures[2];
     Eigen::Vector2i rgbd_texture_sizes[2] = {Eigen::Vector2i::Zero(), Eigen::Vector2i::Zero()};
+    GLuint          eye_textures[2];
+    Eigen::Vector2i eye_texture_sizes[2] = {Eigen::Vector2i::Zero(), Eigen::Vector2i::Zero()};
+    GLuint          host_image_texture;
 
     GLuint demo_vao;
     GLuint demoShaderProgram;
@@ -512,7 +600,7 @@ public:
         // Init and verify GLEW
         const GLenum glew_err = glewInit();
         if (glew_err != GLEW_OK) {
-            spdlog::get(name)->error("GLEW Error: {}", glewGetErrorString(glew_err));
+            spdlog::get(name)->error("GLEW Error: {}", (void*)glewGetErrorString(glew_err));
             glfwDestroyWindow(gui_window);
             ILLIXR::abort("[debugview] Failed to initialize GLEW");
         }
@@ -574,6 +662,19 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, rgbd_textures[1]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glGenTextures(2, &(eye_textures[0]));
+        glBindTexture(GL_TEXTURE_2D, eye_textures[0]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, eye_textures[1]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glGenTextures(1, &host_image_texture);
+        glBindTexture(GL_TEXTURE_2D, host_image_texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
