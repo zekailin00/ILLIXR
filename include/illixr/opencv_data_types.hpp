@@ -39,17 +39,6 @@ struct gaze_type : switchboard::event {
         , gaze1{std::move(_gaze1)} { }
 };
 
-struct host_image_type : switchboard::event {
-    int width, height;
-    std::vector<uint8_t> host_image;
-
-    host_image_type(std::vector<uint8_t>& _host_image,
-        int _width, int _height)
-        : host_image{std::move(_host_image)}
-        , width{_width}
-        , height{_height} { }
-};
-
 struct rgb_depth_type : public switchboard::event {
     [[maybe_unused]] time_point time;
     cv::Mat                     rgb;

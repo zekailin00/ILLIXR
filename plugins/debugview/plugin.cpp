@@ -361,6 +361,8 @@ public:
             host_image->width, host_image->height, 0, 
             GL_RGBA, GL_UNSIGNED_BYTE, host_image->host_image.data()
         );
+        GLint swizzleMask1[]    = {GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask1);
 
         RAC_ERRNO_MSG("debugview at end of load_host_image");
         return false;

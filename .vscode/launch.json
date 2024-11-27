@@ -95,13 +95,13 @@
         "name": "ILLIXR offload",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build-offload/main.dbg.exe",
+        "program": "${workspaceFolder}/build-offload/drop/bin/main.dbg.exe",
         "args": [
           "--yaml=${workspaceFolder}/illixr.yaml",
-          "2>&1",
-          "|",
-          "tee",
-          "logs.txt"
+          // "2>&1",
+          // "|",
+          // "tee",
+          // "logs.txt"
         ],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",

@@ -40,8 +40,10 @@ int initializeBridge()
     // Convert IPv4 and IPv6 addresses from text to binary form
     SOCKET_CHECK(inet_pton(AF_INET, IP_ADDR, &address.sin_addr) <= 0);
     int result = connect(client_fd, (struct sockaddr*)&address, sizeof(address));
+
+    printf("Socket connected: %d\n", result);
     
-    return 0;
+    return result;
 }
 
 bool packet_arrived()

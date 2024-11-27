@@ -112,6 +112,24 @@ struct pose_type : public switchboard::event {
         , orientation{std::move(orientation_)} { }
 };
 
+struct image_packet_type : public switchboard::event {
+    std::vector<unsigned char> packet;
+
+    image_packet_type(std::vector<unsigned char>& _packet)
+        : packet(_packet) { }
+};
+
+struct host_image_type : public switchboard::event {
+    int width, height;
+    std::vector<uint8_t> host_image;
+
+    host_image_type(std::vector<uint8_t>& _host_image,
+        int _width, int _height)
+        : host_image{std::move(_host_image)}
+        , width{_width}
+        , height{_height} { }
+};
+
 typedef struct {
     pose_type  pose;
     time_point predict_computed_time; // Time at which the prediction was computed

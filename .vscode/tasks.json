@@ -39,7 +39,7 @@
             "label": "build compute offload",
             "type": "shell",
             "dependsOn": "configure compute offload",
-            "command": "cmake --build ./build-offload -j$(nproc)"
+            "command": "cmake --build ./build-offload --verbose -j$(nproc)"
         },
         {
             "label": "install compute offload",

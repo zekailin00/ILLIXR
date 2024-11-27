@@ -48,6 +48,7 @@ public:
         threadloop{name_, pb_},
         _m_sb{pb->lookup_impl<switchboard>()},
         pp{pb->lookup_impl<pose_prediction>()},
+        imagePacket{_m_sb->get_writer<image_packet_type>("image_packet")},
         offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")}
         {
             STATUS_CHECK(initializeBridge(), "Failed to initialize bridge.");
@@ -121,12 +122,19 @@ protected:
             else if (packet.header.command == CS_RSP_IMG)
             {
                 std::vector<uint8_t> image;
-                image.resize(IMG_WIDTH * IMG_HEIGHT * IMG_CHN);
-
+                image.resize(packet.header.payload_size);
                 memcpy(image.data(), packet.payload, packet.header.payload_size);
-                offloadImageTopic.put(
-                    offloadImageTopic.allocate<host_image_type>(
-                        host_image_type{image, IMG_WIDTH, IMG_HEIGHT}
+
+                // offloadImageTopic.put(
+                //     offloadImageTopic.allocate<host_image_type>(
+                //         host_image_type{image, IMG_WIDTH, IMG_HEIGHT}
+                //     )
+                // );
+
+                printf("put packets\n");
+                imagePacket.put(
+                    imagePacket.allocate<image_packet_type>(
+                        image_packet_type{image}
                     )
                 );
                 
@@ -148,6 +156,7 @@ private:
     const std::shared_ptr<switchboard> _m_sb;
     const std::shared_ptr<pose_prediction> pp;
     switchboard::writer<host_image_type> offloadImageTopic;
+    switchboard::writer<image_packet_type> imagePacket;
     int imageIndex = 0;
 
     unsigned char imageBuffer[IMG_WIDTH * IMG_HEIGHT * IMG_CHN];
