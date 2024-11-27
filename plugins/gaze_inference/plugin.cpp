@@ -1,4 +1,5 @@
 #include "illixr/opencv_data_types.hpp"
+#include "illixr/data_format.hpp"
 #include "illixr/phonebook.hpp"
 #include "illixr/relative_clock.hpp"
 #include "illixr/threadloop.hpp"

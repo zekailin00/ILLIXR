@@ -69,7 +69,7 @@ protected:
         unsigned char *outImage;
         int outWidth, outHeight;
 
-        printf("DEBUG: get latest frame.\n");
+        // printf("DEBUG: get latest frame.\n");
         bool result = decoder->GetLatestFrame(&outImage, &outWidth, &outHeight);
         if (!result)
             return;

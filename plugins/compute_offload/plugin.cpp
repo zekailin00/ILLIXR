@@ -49,9 +49,11 @@ public:
         _m_sb{pb->lookup_impl<switchboard>()},
         pp{pb->lookup_impl<pose_prediction>()},
         imagePacket{_m_sb->get_writer<image_packet_type>("image_packet")},
-        offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")}
+        offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")},
+        netThroughput{_m_sb->get_writer<network_throughput_type>("net_throughput")}
         {
             STATUS_CHECK(initializeBridge(), "Failed to initialize bridge.");
+            timeStart = std::chrono::high_resolution_clock::now();
         }
 
 protected:
@@ -60,8 +62,9 @@ protected:
         message_packet_t packet;
         if (packet_arrived())
         {
+#ifndef NDEBUG
             LOG("DEBUG: new data is arriving");
-
+#endif
             ssize_t received = receive(&packet.header, sizeof(header_t));
             STATUS_CHECK(received != sizeof(header_t), "Error receiving header");
 
@@ -81,6 +84,21 @@ protected:
                     STATUS_CHECK(chunk_bytes_received == -1, "Error receiving message data");
                     bytes_received += chunk_bytes_received;
                 }
+            }
+
+            byteReceived += (received + packet.header.payload_size);
+            auto now = std::chrono::high_resolution_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(now - timeStart).count();
+            if (elapsedTime > 3)
+            {
+                netThroughput.put(
+                    netThroughput.allocate<network_throughput_type>(
+                        network_throughput_type{byteReceived / elapsedTime}
+                    )
+                );
+
+                timeStart = now;
+                byteReceived = 0;   
             }
 
             if (packet.header.command == CS_REQ_POSE)
@@ -113,7 +131,9 @@ protected:
                         const char* data_ptr = packet.payload + index;
                         ssize_t bytes_sent = send(data_ptr, chunk_size);
 
+#ifndef NDEBUG
                         LOG("DEBUG: sent pose");
+#endif
                         STATUS_CHECK(bytes_sent == -1, "DEBUG: failed to send everything");
                         index += bytes_sent;
                     }
@@ -131,7 +151,6 @@ protected:
                 //     )
                 // );
 
-                printf("put packets\n");
                 imagePacket.put(
                     imagePacket.allocate<image_packet_type>(
                         image_packet_type{image}
@@ -139,7 +158,9 @@ protected:
                 );
                 
                 free(packet.payload);
+#ifndef NDEBUG
                 printf("received image: %d\n", imageIndex++);
+#endif
             }
             else if (packet.header.command == CS_GRANT_TOKEN)
             {
@@ -158,6 +179,10 @@ private:
     switchboard::writer<host_image_type> offloadImageTopic;
     switchboard::writer<image_packet_type> imagePacket;
     int imageIndex = 0;
+
+    switchboard::writer<network_throughput_type> netThroughput;
+    std::chrono::_V2::system_clock::time_point timeStart;
+    unsigned int byteReceived = 0;
 
     unsigned char imageBuffer[IMG_WIDTH * IMG_HEIGHT * IMG_CHN];
 };

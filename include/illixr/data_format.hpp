@@ -130,6 +130,25 @@ struct host_image_type : public switchboard::event {
         , height{_height} { }
 };
 
+struct gaze_type : switchboard::event {
+    time_point time;
+    std::vector<double> gaze0;
+    std::vector<double> gaze1;
+
+    gaze_type(time_point _time, std::vector<double>& _gaze0, std::vector<double>& _gaze1)
+        : time{_time}
+        , gaze0{std::move(_gaze0)}
+        , gaze1{std::move(_gaze1)} { }
+};
+
+struct network_throughput_type : public switchboard::event {
+    float throughputBytesPerSec;
+
+    network_throughput_type(float _throughputBytesPerSec)
+        : throughputBytesPerSec{_throughputBytesPerSec}
+         { }
+};
+
 typedef struct {
     pose_type  pose;
     time_point predict_computed_time; // Time at which the prediction was computed

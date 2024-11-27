@@ -109,10 +109,8 @@ Decoder::~Decoder()
 
 bool Decoder::GetLatestFrame(unsigned char** outImage, int* outWidth, int* outHeight)
 {
-    printf("In get lastest frame\n");
     if (av_read_frame(format_ctx, packet) >= 0)
     {
-        printf("Frame received\n");
         if (packet->stream_index == video_stream_index &&
             avcodec_send_packet(codec_ctx, packet) == 0 &&
             avcodec_receive_frame(codec_ctx, frame) == 0)
@@ -122,8 +120,6 @@ bool Decoder::GetLatestFrame(unsigned char** outImage, int* outWidth, int* outHe
                 0, codec_ctx->height,
                 frame_rgb->data, frame_rgb->linesize
             );
-
-            printf("sws scaling\n");
 
             if (ret < 0)
             {
@@ -137,7 +133,7 @@ bool Decoder::GetLatestFrame(unsigned char** outImage, int* outWidth, int* outHe
                 *outImage  = frame_rgb->data[0];
                 *outHeight = frame->height;
                 *outWidth  = frame->width;
-                printf("Compression rate: %f percent\n", packet->size * 1.0f / (frame->width * frame->height * 3.0f) * 100);
+                // printf("Compression rate: %f percent\n", packet->size * 1.0f / (frame->width * frame->height * 3.0f) * 100);
                 return true;
             }
 

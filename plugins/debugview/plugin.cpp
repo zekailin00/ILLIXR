@@ -62,6 +62,8 @@ public:
         : threadloop{name_, pb_}
         , sb{pb->lookup_impl<switchboard>()}
         , pp{pb->lookup_impl<pose_prediction>()}
+        , _m_netThroughput{sb->get_reader<network_throughput_type>("net_throughput")}
+        , _m_gaze{sb->get_reader<gaze_type>("gaze")}
         , _m_slow_pose{sb->get_reader<pose_type>("slow_pose")}
         , _m_fast_pose{sb->get_reader<imu_raw_type>("imu_raw")} //, glfw_context{pb->lookup_impl<global_config>()->glfw_context}
         , _m_rgb_depth(sb->get_reader<rgb_depth_type>("rgb_depth"))
@@ -182,6 +184,23 @@ public:
         } else {
             ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "Invalid ground truth pose pointer");
         }
+
+        switchboard::ptr<const gaze_type> gaze_ptr = _m_gaze.get_ro_nullable();
+        if (gaze_ptr)
+        {
+            ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Gaze prediction");
+            ImGui::Text("Gaze left:\n  (%f, %f)", gaze_ptr->gaze0[0], gaze_ptr->gaze0[1]);
+            ImGui::Text("Gaze right:\n  (%f, %f)", gaze_ptr->gaze1[0], gaze_ptr->gaze1[1]);
+        }
+
+        switchboard::ptr<const network_throughput_type> net_ptr = _m_netThroughput.get_ro_nullable();
+        if (net_ptr)
+        {
+            ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Network throughput:");
+            ImGui::SameLine();
+            ImGui::Text("%f Bytes / Second", net_ptr->throughputBytesPerSec);
+        }
+
 
         ImGui::Text("Debug view eulers:");
         ImGui::Text("	(%f, %f)", view_euler.x(), view_euler.y());
@@ -502,6 +521,8 @@ private:
     const std::shared_ptr<switchboard>     sb;
     const std::shared_ptr<pose_prediction> pp;
 
+    switchboard::reader<network_throughput_type> _m_netThroughput;
+    switchboard::reader<gaze_type>         _m_gaze;
     switchboard::reader<pose_type>         _m_slow_pose;
     switchboard::reader<imu_raw_type>      _m_fast_pose;
     switchboard::reader<rgb_depth_type>    _m_rgb_depth;
