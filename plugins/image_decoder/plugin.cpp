@@ -24,7 +24,8 @@ public:
     image_decoder(const std::string& name_, phonebook* pb_):
         threadloop{name_, pb_},
         _m_sb{pb->lookup_impl<switchboard>()},
-        offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")}
+        offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")},
+        frameRateTopic{_m_sb->get_writer<frame_rate_type>("frame_rate")}
         {
             _m_sb->schedule<image_packet_type>(
                 id, "image_packet",
@@ -39,6 +40,8 @@ public:
                     }
                 }
             );
+
+            timeStart = std::chrono::high_resolution_clock::now();
         }
     
     std::deque<unsigned char> framePackets{};
@@ -80,6 +83,14 @@ protected:
         memcpy(image.data(), outImage, payloadSize);
 
         printf("width: %d, height: %d, payloadSize: %d\n", outWidth, outHeight, payloadSize);
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeStart).count();
+        timeStart = now;
+        frameRateTopic.put(
+            frameRateTopic.allocate<frame_rate_type>(
+                frame_rate_type{1.0f/elapsedTime * 1000.0f}
+            )
+        );
 
         offloadImageTopic.put(
             offloadImageTopic.allocate<host_image_type>(
@@ -92,6 +103,9 @@ private:
     const std::shared_ptr<switchboard> _m_sb;
     switchboard::writer<host_image_type> offloadImageTopic;
     int imageIndex = 0;
+
+    switchboard::writer<frame_rate_type> frameRateTopic;
+    std::chrono::_V2::system_clock::time_point timeStart;
 
     std::mutex mtx;
     Decoder* decoder = nullptr;

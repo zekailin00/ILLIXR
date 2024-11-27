@@ -64,6 +64,7 @@ public:
         , pp{pb->lookup_impl<pose_prediction>()}
         , _m_netThroughput{sb->get_reader<network_throughput_type>("net_throughput")}
         , _m_gaze{sb->get_reader<gaze_type>("gaze")}
+        , _m_image_frame_rate{sb->get_reader<frame_rate_type>("frame_rate")}
         , _m_slow_pose{sb->get_reader<pose_type>("slow_pose")}
         , _m_fast_pose{sb->get_reader<imu_raw_type>("imu_raw")} //, glfw_context{pb->lookup_impl<global_config>()->glfw_context}
         , _m_rgb_depth(sb->get_reader<rgb_depth_type>("rgb_depth"))
@@ -201,6 +202,13 @@ public:
             ImGui::Text("%f Bytes / Second", net_ptr->throughputBytesPerSec);
         }
 
+        switchboard::ptr<const frame_rate_type> framerate_ptr = _m_image_frame_rate.get_ro_nullable();
+        if (framerate_ptr)
+        {
+            ImGui::TextColored(ImVec4(0.0, 1.0, 0.0, 1.0), "Frame rate:");
+            ImGui::SameLine();
+            ImGui::Text("%d", framerate_ptr->framerate);
+        }
 
         ImGui::Text("Debug view eulers:");
         ImGui::Text("	(%f, %f)", view_euler.x(), view_euler.y());
@@ -521,6 +529,7 @@ private:
     const std::shared_ptr<switchboard>     sb;
     const std::shared_ptr<pose_prediction> pp;
 
+    switchboard::reader<frame_rate_type> _m_image_frame_rate;
     switchboard::reader<network_throughput_type> _m_netThroughput;
     switchboard::reader<gaze_type>         _m_gaze;
     switchboard::reader<pose_type>         _m_slow_pose;

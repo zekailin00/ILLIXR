@@ -149,6 +149,22 @@ struct network_throughput_type : public switchboard::event {
          { }
 };
 
+struct frame_rate_type : public switchboard::event {
+    int framerate;
+
+    frame_rate_type(int _framerate)
+        : framerate{_framerate}
+        { }
+};
+
+struct time_interval_type : public switchboard::event {
+    float milisecond;
+
+    time_interval_type(float _milisecond)
+        : milisecond{_milisecond}
+        { }
+};
+
 typedef struct {
     pose_type  pose;
     time_point predict_computed_time; // Time at which the prediction was computed

@@ -27,3 +27,10 @@ illixr_monado_*.sh
 openxr_launch.csh
 openxr_launch.sh
 
+
+build-vk/*
+build-native-vk/*
+build-offload/*
+# *.yaml
+*.sh
+plugins/offline_eye/images/**
