@@ -106,7 +106,7 @@
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [
-            { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build-offload/drop/lib:/home/zekailin00/Downloads/onnxruntime-linux-x64-1.19.2/lib"},
+            { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build-offload/drop/lib:/home/zekailin00/Downloads/onnxruntime-linux-x64-gpu-1.20.1/lib"},
             { "name": "ILLIXR_RUN_DURATION", "value": "20000"},
           ],
         "externalConsole": false,

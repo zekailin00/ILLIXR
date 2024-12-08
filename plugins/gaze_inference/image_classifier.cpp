@@ -104,7 +104,7 @@ ImageClassifier::ImageClassifier(const std::string& modelFilepath) {
   // Set up options for session
   Ort::SessionOptions sessionOptions;
   // Enable CUDA
-  // sessionOptions.AppendExecutionProvider_CUDA(OrtCUDAProviderOptions{});
+  sessionOptions.AppendExecutionProvider_CUDA(OrtCUDAProviderOptions{});
   // Sets graph optimization level (Here, enable all possible optimizations)
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_ALL);

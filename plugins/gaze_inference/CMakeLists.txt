@@ -22,7 +22,7 @@ if(BUILD_OPENCV)
     add_dependencies(${PLUGIN_NAME} OpenCV_Viz)
 endif()
 
-set(ONNXRUNTIME_ROOT_PATH /home/zekailin00/Downloads/onnxruntime-linux-x64-1.19.2)
+set(ONNXRUNTIME_ROOT_PATH /home/zekailin00/Downloads/onnxruntime-linux-x64-gpu-1.20.1)
 set(ONNXRUNTIME_INCLUDE_DIRS
   ${ONNXRUNTIME_ROOT_PATH}/include/
   ${ONNXRUNTIME_ROOT_PATH}
