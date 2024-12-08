@@ -237,9 +237,6 @@ public:
         }
 
         if (use_eye) {
-            ImGui::SetNextWindowSize(ImVec2(700, 320), ImGuiCond_Once);
-            ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once,
-                                    ImVec2(1.0f, 1.0f));
             ImGui::Begin("Eye Tracker View");
             auto windowSize     = ImGui::GetWindowSize();
             auto verticalOffset = ImGui::GetCursorPos().y;
@@ -250,13 +247,10 @@ public:
         }
 
         if (use_host_image) {
-            ImGui::SetNextWindowSize(ImVec2(700, 320), ImGuiCond_Once);
-            ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y), ImGuiCond_Once,
-                                    ImVec2(1.0f, 1.0f));
             ImGui::Begin("Host View");
             auto windowSize     = ImGui::GetWindowSize();
             auto verticalOffset = ImGui::GetCursorPos().y;
-            ImGui::Image((void*) (intptr_t) host_image_texture, ImVec2(windowSize.x / 2, windowSize.y - verticalOffset * 2));
+            ImGui::Image((void*) (intptr_t) host_image_texture, ImVec2(1280 / 1.5, 720 / 1.5));
             ImGui::End();
         }
 

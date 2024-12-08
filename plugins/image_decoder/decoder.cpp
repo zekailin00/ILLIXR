@@ -64,7 +64,12 @@ Decoder::Decoder(void* data, ReadStreamCb readStreamCb)
     }
     format_ctx->pb = avio_ctx;
 
-    if (avformat_open_input(&format_ctx, NULL, NULL, NULL) != 0)
+    AVDictionary* options = nullptr;
+    av_dict_set(&options, "probesize", "5000000", 0); // 5 MB
+    av_dict_set(&options, "analyzeduration", "50000000", 0); // 5 seconds
+
+
+    if (avformat_open_input(&format_ctx, NULL, NULL, &options) != 0)
     {
         fprintf(stderr, "Could not open input file.\n");
         throw "Could not open input file.";
