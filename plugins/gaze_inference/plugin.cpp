@@ -41,6 +41,10 @@ public:
         {
             std::vector<double> center0 = ic.Inference(eye->img0);
             std::vector<double> center1 = ic.Inference(eye->img1);
+            center0[0] /= 640.0;
+            center0[1] /= 640.0;
+            center1[0] /= 640.0;
+            center1[1] /= 640.0;
             std::cout << "Done inference at time: " << eye->time.time_since_epoch().count() << std::endl;
             std::cout << "center0 x:" << center0[0] << ", y: " << center0[1] << std::endl;
             std::cout << "center1 x:" << center1[0] << ", y: " << center1[1] << std::endl;

@@ -11,6 +11,7 @@ enum socket_protocol
     CS_REQ_POSE = 1u,
     CS_RSP_POSE = 2u,
     CS_RSP_IMG  = 3u,
+    CS_RSP_GAZE = 4u,
 
 };
 

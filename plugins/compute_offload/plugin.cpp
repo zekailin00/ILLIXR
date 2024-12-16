@@ -50,7 +50,8 @@ public:
         pp{pb->lookup_impl<pose_prediction>()},
         imagePacket{_m_sb->get_writer<image_packet_type>("image_packet")},
         offloadImageTopic{_m_sb->get_writer<host_image_type>("host_image")},
-        netThroughput{_m_sb->get_writer<network_throughput_type>("net_throughput")}
+        netThroughput{_m_sb->get_writer<network_throughput_type>("net_throughput")},
+        _m_gaze{_m_sb->get_reader<gaze_type>("gaze")}
         {
             STATUS_CHECK(initializeBridge(), "Failed to initialize bridge.");
             timeStart = std::chrono::high_resolution_clock::now();
@@ -158,6 +159,37 @@ protected:
                 );
                 
                 free(packet.payload);
+
+                switchboard::ptr<const gaze_type> gaze_ptr = _m_gaze.get_ro_nullable();
+                if (gaze_ptr)
+                {
+                    float buffer[4] = {
+                        gaze_ptr->gaze0[0], gaze_ptr->gaze0[1],
+                        gaze_ptr->gaze1[0], gaze_ptr->gaze1[1]
+                    };
+
+                    assert(sizeof(buffer) == 16);
+                    packet.header.command = CS_RSP_GAZE;
+                    packet.header.payload_size = sizeof(buffer);
+                    packet.payload = (char*)buffer;
+
+                    size_t size_sent = send(&packet, sizeof(header_t));
+                    STATUS_CHECK(size_sent != sizeof(header_t), "DEBUG: failed to send header");
+
+                    if (packet.header.payload_size != 0)
+                    {
+                        size_t index = 0;
+                        while (index < packet.header.payload_size)
+                        {
+                            size_t chunk_size = MIN(1024ul, packet.header.payload_size - index);
+                            const char* data_ptr = packet.payload + index;
+                            ssize_t bytes_sent = send(data_ptr, chunk_size);
+                            STATUS_CHECK(bytes_sent == -1, "DEBUG: failed to send everything");
+                            index += bytes_sent;
+                        }
+                    }
+                }
+
 #ifndef NDEBUG
                 printf("received image: %d\n", imageIndex++);
 #endif
@@ -178,6 +210,7 @@ private:
     const std::shared_ptr<pose_prediction> pp;
     switchboard::writer<host_image_type> offloadImageTopic;
     switchboard::writer<image_packet_type> imagePacket;
+    switchboard::reader<gaze_type>         _m_gaze;
     int imageIndex = 0;
 
     switchboard::writer<network_throughput_type> netThroughput;
